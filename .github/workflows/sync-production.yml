@@ -1,4 +1,4 @@
-name: Sync deployment branches
+name: 배포 브랜치 동기화
 
 on:
   schedule:
@@ -18,36 +18,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout deployment repository
-        uses: actions/checkout@v4
+      - name: 배포 저장소 체크아웃
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Fetch upstream
+      - name: 원본 저장소 브랜치 가져오기
         run: |
           git remote add upstream https://github.com/inu-appcenter/INU-TeamFlow-web.git
           git fetch upstream main develop
 
-      - name: Sync main to production
+      - name: main 브랜치 동기화
         run: |
           UPSTREAM_COMMIT=$(git rev-parse upstream/main)
-          PRODUCTION_COMMIT=$(git ls-remote origin refs/heads/production | cut -f1)
+          MAIN_COMMIT=$(git ls-remote origin refs/heads/main | cut -f1)
 
-          if [ "$UPSTREAM_COMMIT" = "$PRODUCTION_COMMIT" ]; then
-            echo "Production is already up to date."
+          if [ "$UPSTREAM_COMMIT" = "$MAIN_COMMIT" ]; then
+            echo "main 브랜치가 이미 최신 상태입니다."
           else
-            echo "Updating production."
-            git push origin upstream/main:production --force
+            echo "main 브랜치를 원본과 동기화합니다."
+            git push origin \
+              "$UPSTREAM_COMMIT:refs/heads/main" \
+              --force
           fi
 
-      - name: Sync develop
+      - name: develop 브랜치 동기화
         run: |
           UPSTREAM_COMMIT=$(git rev-parse upstream/develop)
           DEVELOP_COMMIT=$(git ls-remote origin refs/heads/develop | cut -f1)
 
           if [ "$UPSTREAM_COMMIT" = "$DEVELOP_COMMIT" ]; then
-            echo "Develop is already up to date."
+            echo "develop 브랜치가 이미 최신 상태입니다."
           else
-            echo "Updating develop."
-            git push origin upstream/develop:develop --force
+            echo "develop 브랜치를 원본과 동기화합니다."
+            git push origin \
+              "$UPSTREAM_COMMIT:refs/heads/develop" \
+              --force
           fi
